@@ -1,0 +1,15 @@
+﻿<Window x:Class="CatanM_S.MainWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Catan Simulation" Height="600" Width="1700">
+    <Grid>
+        <Canvas Name="BoardCanvas" Width="700" Height="584" Background="LightGray" HorizontalAlignment="Left" VerticalAlignment="Center">
+            <!-- Aquí se dibujarán los Tiles y Casas -->
+        </Canvas>
+        <Button Content="Start Simulation" Click="StartSimulation_Click" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10,0,0,10" Width="120" Height="30"/>
+        <ScrollViewer HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,45,0" Width="516" Height="300">
+            <TextBlock Name="ResultTextBlock" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+        </ScrollViewer>
+        <ListBox Name="DiceResultsListBox" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,45,10" Width="516" Height="200"/>
+    </Grid>
+</Window>
