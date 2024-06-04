@@ -12,7 +12,7 @@
         public void RunSimulation()
         {
             ApplyStrategies();
-            for (int i = 0; i < 25; i++)
+            for (int i = 0; i < 20; i++)
             {
                 _game.RollDice();
             }
@@ -20,52 +20,71 @@
 
         private void ApplyStrategies()
         {
-            ApplyRandomStrategy(_game.Players[0]);
-            ApplyBestNumberProbabilityStrategy(_game.Players[1]);
-            ApplyBestResourceStrategy(_game.Players[2]);
-            ApplyBestResourceAndNumberStrategy(_game.Players[3]);
+            var occupiedIntersections = new HashSet<Intersection>();
+
+            ApplyBestNumberProbabilityStrategy(_game.Players[1], occupiedIntersections);
+            ApplyBestResourceStrategy(_game.Players[2], occupiedIntersections);
+            ApplyBestResourceAndNumberStrategy(_game.Players[3], occupiedIntersections);
+            ApplyRandomStrategy(_game.Players[0], occupiedIntersections);
+
         }
 
-        private void ApplyRandomStrategy(Player player)
+        private void ApplyRandomStrategy(Player player, HashSet<Intersection> occupiedIntersections)
         {
             var random = new Random();
             var intersections = _game.Board.Intersections;
-            var firstHouse = intersections[random.Next(intersections.Count)];
-            player.AddHouse(firstHouse);
-            Intersection secondHouse;
-            do
-            {
-                secondHouse = intersections[random.Next(intersections.Count)];
-            } while (secondHouse == firstHouse);
-            player.AddHouse(secondHouse);
+
+            var house = GetRandomIntersection(random, intersections, occupiedIntersections);
+            player.AddHouse(house);
+            occupiedIntersections.Add(house);
         }
 
-        private void ApplyBestNumberProbabilityStrategy(Player player)
+        private Intersection GetRandomIntersection(Random random, List<Intersection> intersections, HashSet<Intersection> occupiedIntersections)
+        {
+            Intersection selectedIntersection;
+            do
+            {
+                selectedIntersection = intersections[random.Next(intersections.Count)];
+            } while (occupiedIntersections.Contains(selectedIntersection));
+            return selectedIntersection;
+        }
+
+        private void ApplyBestNumberProbabilityStrategy(Player player, HashSet<Intersection> occupiedIntersections)
         {
             var intersections = _game.Board.Intersections
                 .OrderByDescending(i => i.AdjacentTiles.Sum(t => t.Number != 0 ? 1.0 / (6.0 - Math.Abs(t.Number - 7)) : 0))
-                .Take(2).ToList();
-            player.AddHouse(intersections[0]);
-            player.AddHouse(intersections[1]);
+                .ToList();
+            AddUniqueHouse(player, intersections, occupiedIntersections);
         }
 
-        private void ApplyBestResourceStrategy(Player player)
+        private void ApplyBestResourceStrategy(Player player, HashSet<Intersection> occupiedIntersections)
         {
             var intersections = _game.Board.Intersections
                 .OrderByDescending(i => i.AdjacentTiles.Count(t => t.Resource != ResourceType.Desert))
-                .Take(2).ToList();
-            player.AddHouse(intersections[0]);
-            player.AddHouse(intersections[1]);
+                .ToList();
+            AddUniqueHouse(player, intersections, occupiedIntersections);
         }
 
-        private void ApplyBestResourceAndNumberStrategy(Player player)
+        private void ApplyBestResourceAndNumberStrategy(Player player, HashSet<Intersection> occupiedIntersections)
         {
             var intersections = _game.Board.Intersections
                 .OrderByDescending(i => i.AdjacentTiles.Sum(t => t.Number != 0 ? 1.0 / (6.0 - Math.Abs(t.Number - 7)) : 0)
                                         + i.AdjacentTiles.Count(t => t.Resource != ResourceType.Desert))
-                .Take(2).ToList();
-            player.AddHouse(intersections[0]);
-            player.AddHouse(intersections[1]);
+                .ToList();
+            AddUniqueHouse(player, intersections, occupiedIntersections);
+        }
+
+        private void AddUniqueHouse(Player player, List<Intersection> intersections, HashSet<Intersection> occupiedIntersections)
+        {
+            foreach (var intersection in intersections)
+            {
+                if (!occupiedIntersections.Contains(intersection))
+                {
+                    player.AddHouse(intersection);
+                    occupiedIntersections.Add(intersection);
+                    break;
+                }
+            }
         }
     }
 }

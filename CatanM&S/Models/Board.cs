@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CatanM_S.Models
@@ -24,25 +25,31 @@ namespace CatanM_S.Models
                 {-2, 1}, {-2, 2}, {-1, 2}, { 0, 2}, { 1, 1}
             };
 
-            ResourceType[] resources = new ResourceType[]
+            // Distribuir aleatoriamente los recursos y los números
+            var resources = new List<ResourceType>
             {
                 ResourceType.Brick, ResourceType.Wood, ResourceType.Wheat, ResourceType.Wheat, ResourceType.Sheep,
                 ResourceType.Ore, ResourceType.Brick, ResourceType.Wood, ResourceType.Brick, ResourceType.Sheep,
                 ResourceType.Ore, ResourceType.Desert, ResourceType.Wheat, ResourceType.Wood, ResourceType.Sheep,
                 ResourceType.Ore, ResourceType.Wood, ResourceType.Wheat, ResourceType.Sheep
             };
-
-            int[] numbers = new int[]
+            var numbers = new List<int>
             {
                 5, 2, 6, 3, 8,
                 10, 9, 12, 11, 4,
-                8, 0, 10, 9, 4,
-                5, 6, 3, 11
+                8, 10, 9, 4, 5, 6, 3, 11
             };
 
+            var random = new Random();
+            resources = resources.OrderBy(r => random.Next()).ToList();
+            numbers = numbers.OrderBy(n => random.Next()).ToList();
+
+            int numberIndex = 0;
             for (int i = 0; i < positions.GetLength(0); i++)
             {
-                Tiles.Add(new Tile(resources[i], numbers[i], positions[i, 0], positions[i, 1]));
+                var resource = resources[i];
+                int number = resource == ResourceType.Desert ? 0 : numbers[numberIndex++];
+                Tiles.Add(new Tile(resource, number, positions[i, 0], positions[i, 1]));
             }
 
             InitializeIntersections();
@@ -50,7 +57,6 @@ namespace CatanM_S.Models
 
         private void InitializeIntersections()
         {
-            // Define todas las posibles intersecciones del tablero de Catán
             var intersectionPositions = new HashSet<(int, int)>
             {
                 (0, 0), (1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1),
