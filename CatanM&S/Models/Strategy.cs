@@ -12,7 +12,7 @@
         public void RunSimulation()
         {
             ApplyStrategies();
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 110; i++)
             {
                 _game.RollDice();
             }
@@ -22,11 +22,10 @@
         {
             var occupiedIntersections = new HashSet<Intersection>();
 
+            ApplyRandomStrategy(_game.Players[0], occupiedIntersections);
             ApplyBestNumberProbabilityStrategy(_game.Players[1], occupiedIntersections);
             ApplyBestResourceStrategy(_game.Players[2], occupiedIntersections);
             ApplyBestResourceAndNumberStrategy(_game.Players[3], occupiedIntersections);
-            ApplyRandomStrategy(_game.Players[0], occupiedIntersections);
-
         }
 
         private void ApplyRandomStrategy(Player player, HashSet<Intersection> occupiedIntersections)

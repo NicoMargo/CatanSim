@@ -18,11 +18,15 @@ namespace CatanM_S.Models
 
         private void InitializeBoard()
         {
+            // Posiciones para 38 hexágonos
             int[,] positions = new int[,]
             {
                 { 0, 0}, { 1, 0}, { 1, -1}, { 0, -1}, {-1, 0}, {-1, 1}, { 0, 1},
                 { 2, 0}, { 2, -1}, { 2, -2}, { 1, -2}, { 0, -2}, {-1, -1}, {-2, 0},
-                {-2, 1}, {-2, 2}, {-1, 2}, { 0, 2}, { 1, 1}
+                {-2, 1}, {-2, 2}, {-1, 2}, { 0, 2}, { 1, 1}, { 3, 0}, { 3, -1},
+                { 3, -2}, { 3, -3}, { 2, -3}, { 1, -3}, { 0, -3}, {-1, -2}, {-2, -1},
+                {-3, 0}, {-3, 1}, {-3, 2}, {-2, 3}, {-1, 3}, { 0, 3}, { 1, 2},
+                { 2, 1}, { 3, 1}
             };
 
             // Distribuir aleatoriamente los recursos y los números
@@ -31,13 +35,18 @@ namespace CatanM_S.Models
                 ResourceType.Brick, ResourceType.Wood, ResourceType.Wheat, ResourceType.Wheat, ResourceType.Sheep,
                 ResourceType.Ore, ResourceType.Brick, ResourceType.Wood, ResourceType.Brick, ResourceType.Sheep,
                 ResourceType.Ore, ResourceType.Desert, ResourceType.Wheat, ResourceType.Wood, ResourceType.Sheep,
-                ResourceType.Ore, ResourceType.Wood, ResourceType.Wheat, ResourceType.Sheep
+                ResourceType.Ore, ResourceType.Wood, ResourceType.Wheat, ResourceType.Sheep, ResourceType.Brick,
+                ResourceType.Wood, ResourceType.Wheat, ResourceType.Wheat, ResourceType.Sheep, ResourceType.Ore,
+                ResourceType.Brick, ResourceType.Wood, ResourceType.Brick, ResourceType.Sheep, ResourceType.Ore,
+                ResourceType.Desert, ResourceType.Wheat, ResourceType.Wood, ResourceType.Sheep, ResourceType.Ore,
+                ResourceType.Wood, ResourceType.Wheat, ResourceType.Sheep
             };
             var numbers = new List<int>
             {
                 5, 2, 6, 3, 8,
                 10, 9, 12, 11, 4,
-                8, 10, 9, 4, 5, 6, 3, 11
+                8, 10, 9, 4, 5, 6, 3, 11, 5, 2, 6, 3, 8,
+                10, 9, 12, 11, 4, 8, 10, 9, 4, 5, 6, 3, 11
             };
 
             var random = new Random();
@@ -61,9 +70,10 @@ namespace CatanM_S.Models
             {
                 (0, 0), (1, 0), (1, -1), (0, -1), (-1, 0), (-1, 1), (0, 1),
                 (2, 0), (2, -1), (2, -2), (1, -2), (0, -2), (-1, -1), (-2, 0),
-                (-2, 1), (-2, 2), (-1, 2), (0, 2), (1, 1),
-                (1, -2), (2, -1), (2, 0), (1, 1), (0, 2), (-1, 1),
-                (-1, 0), (-1, -1), (0, -1), (1, 0), (0, 1), (0, 0)
+                (-2, 1), (-2, 2), (-1, 2), (0, 2), (1, 1), (3, 0), (3, -1),
+                (3, -2), (3, -3), (2, -3), (1, -3), (0, -3), (-1, -2), (-2, -1),
+                (-3, 0), (-3, 1), (-3, 2), (-2, 3), (-1, 3), (0, 3), (1, 2),
+                (2, 1), (3, 1)
             };
 
             foreach (var pos in intersectionPositions)

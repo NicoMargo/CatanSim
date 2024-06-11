@@ -16,15 +16,23 @@ namespace CatanM_S
         public MainWindow()
         {
             InitializeComponent();
-            _game = new Game();
-            _simulator = new StrategySimulator(_game);
+            ResetGame();
             DrawBoard();
         }
 
         private void StartSimulation_Click(object sender, RoutedEventArgs e)
         {
+            
+            ResetGame();
             _simulator.RunSimulation();
-            UpdateUI();
+            UpdateUI();            
+            
+        }
+
+        private void ResetGame()
+        {
+            _game = new Game();
+            _simulator = new StrategySimulator(_game);
         }
 
         private void DrawBoard()
