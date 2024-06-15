@@ -3,50 +3,98 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Threading.Tasks;
+using System.IO;
 using CatanM_S.Models;
+using System.Linq;
 
 namespace CatanM_S
 {
     public partial class MainWindow : Window
     {
-        private Game _game;
-        private StrategySimulator _simulator;
-        private const double HexSize = 40;  // Ajusta el tamaño del hexágono
+        private const double HexSize = 40;  // Adjust the size of the hexagon
+        private List<Player> players;       // List of players
+        private string ResultsDirectoryPath;
+        private string ResultsFilePath;
 
         public MainWindow()
         {
             InitializeComponent();
-            ResetGame();
-            DrawBoard();
+            players = new List<Player>();
+            ResultsDirectoryPath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "Results");
+            if (!Directory.Exists(ResultsDirectoryPath))
+            {
+                Directory.CreateDirectory(ResultsDirectoryPath);
+            }
+            ResultsFilePath = System.IO.Path.Combine(ResultsDirectoryPath, "results.txt");
+            InitializePlayers();
+            LoadPlayerWins();
+            ResetGame(out Game game, out StrategySimulator simulator);
+            DrawBoard(game);
         }
 
-        private void StartSimulation_Click(object sender, RoutedEventArgs e)
+        private async void StartSimulation_Click(object sender, RoutedEventArgs e)
         {
-            
-            ResetGame();
-            _simulator.RunSimulation();
-            UpdateUI();            
-            
+            // Execute 10 Monte Carlo simulations
+            ResultTextBlock.Text = "";
+            for (int i = 0; i < 2000; i++)
+            {
+                ResetGame(out Game game, out StrategySimulator simulator);
+                simulator.RunSimulation();
+                UpdateUI(game);
+                SaveResults(); // Save results after each simulation
+            }
+
+            // Display total wins
+            ShowTotalWins();
         }
 
-        private void ResetGame()
+        private void InitializePlayers()
         {
-            _game = new Game();
-            _simulator = new StrategySimulator(_game);
+            // Initialize players only once
+            players.Clear();
+            for (int i = 0; i < 4; i++)
+            {
+                players.Add(new Player());
+            }
         }
 
-        private void DrawBoard()
+        private void ResetPlayersResources()
+        {
+            // Reset players' resources between simulations, but not their wins
+            foreach (var player in players)
+            {
+                player.Resources[ResourceType.Wood] = 0;
+                player.Resources[ResourceType.Brick] = 0;
+                player.Resources[ResourceType.Sheep] = 0;
+                player.Resources[ResourceType.Wheat] = 0;
+                player.Resources[ResourceType.Ore] = 0;
+                player.Houses.Clear();
+            }
+        }
+
+        private void ResetGame(out Game game, out StrategySimulator simulator)
+        {
+            ResetPlayersResources();
+            game = new Game();
+            simulator = new StrategySimulator(game);
+            players = game.Players; // Update players list
+            DrawBoard(game);
+        }
+
+        private void DrawBoard(Game game)
         {
             BoardCanvas.Children.Clear();
-            foreach (var tile in _game.Board.Tiles)
+            foreach (var tile in game.Board.Tiles)
             {
                 var (x, y) = Hexagon.HexToPixel(tile.Q, tile.R, HexSize);
                 DrawHexagon(x + BoardCanvas.Width / 2, y + BoardCanvas.Height / 2, HexSize, tile.Resource, tile.Number);
             }
 
-            for (int i = 0; i < _game.Players.Count; i++)
+            // Draw houses for each player
+            for (int i = 0; i < game.Players.Count; i++)
             {
-                var player = _game.Players[i];
+                var player = game.Players[i];
                 foreach (var house in player.Houses)
                 {
                     var (x, y) = Hexagon.IntersectionToPixel(house.Q, house.R, HexSize);
@@ -57,6 +105,7 @@ namespace CatanM_S
 
         private void DrawHexagon(double x, double y, double size, ResourceType resource, int number)
         {
+            // Draw a hexagon with the given resource type and number
             Polygon hex = new Polygon
             {
                 Stroke = Brushes.Black,
@@ -74,7 +123,7 @@ namespace CatanM_S
             };
             BoardCanvas.Children.Add(hex);
 
-            // Añadir el número en el centro del hexágono
+            // Add the number in the center of the hexagon
             if (number != 0)
             {
                 TextBlock numberText = new TextBlock
@@ -92,6 +141,7 @@ namespace CatanM_S
 
         private void DrawHouse(double x, double y, Brush color)
         {
+            // Draw a house with the given color at the specified coordinates
             Ellipse house = new Ellipse
             {
                 Stroke = color,
@@ -100,13 +150,14 @@ namespace CatanM_S
                 Width = 10,
                 Height = 10
             };
-            Canvas.SetLeft(house, x - 5);  // Centrar la casa
-            Canvas.SetTop(house, y - 5);   // Centrar la casa
+            Canvas.SetLeft(house, x - 5);  // Center the house
+            Canvas.SetTop(house, y - 5);   // Center the house
             BoardCanvas.Children.Add(house);
         }
 
         private Brush GetResourceBrush(ResourceType resource)
         {
+            // Get the brush color corresponding to the resource type
             return resource switch
             {
                 ResourceType.Wood => Brushes.ForestGreen,
@@ -121,6 +172,7 @@ namespace CatanM_S
 
         private Brush GetPlayerColor(int playerIndex)
         {
+            // Get the color corresponding to the player index
             return playerIndex switch
             {
                 0 => Brushes.Red,
@@ -133,6 +185,7 @@ namespace CatanM_S
 
         private string GetPlayerColorText(int playerIndex)
         {
+            // Get the text representation of the player's color
             return playerIndex switch
             {
                 0 => "Red",
@@ -145,6 +198,7 @@ namespace CatanM_S
 
         private string GetPlayerStrategy(int playerIndex)
         {
+            // Get the text representation of the player's strategy
             return playerIndex switch
             {
                 0 => "Random",
@@ -155,42 +209,171 @@ namespace CatanM_S
             };
         }
 
-        private void UpdateUI()
+        private void UpdateUI(Game game)
         {
-            DrawBoard();
-            UpdateResourceCounts();
-            UpdateDiceResults();
+            // Update the UI with the latest game state
+            DrawBoard(game);
+            UpdateResourceCounts(game);
+            UpdateDiceResults(game);
         }
 
-        private void UpdateResourceCounts()
+        private void UpdateResourceCounts(Game game)
         {
-            ResultTextBlock.Text = "";
-            for (int i = 0; i < _game.Players.Count; i++)
+            ResultTextBlock.Text += "\nSimulation Result:\n";
+            int maxScore = int.MinValue;
+            string winner = "";
+            int winnerIndex = -1;
+
+            // Calculate and display the score for each player
+            for (int i = 0; i < game.Players.Count; i++)
             {
-                var player = _game.Players[i];
+                var player = game.Players[i];
                 var playerColor = GetPlayerColorText(i).ToString();
                 var playerStrategy = GetPlayerStrategy(i);
+                int score = CalculateScore(player);
                 ResultTextBlock.Text += $"({playerStrategy}, {playerColor}): " +
                     $"Wood: {player.Resources[ResourceType.Wood]}, " +
                     $"Brick: {player.Resources[ResourceType.Brick]}, " +
                     $"Sheep: {player.Resources[ResourceType.Sheep]}, " +
                     $"Wheat: {player.Resources[ResourceType.Wheat]}, " +
-                    $"Ore: {player.Resources[ResourceType.Ore]}\n";
+                    $"Ore: {player.Resources[ResourceType.Ore]}, " +
+                    $"Score: {score}\n";
+                if (score > maxScore)
+                {
+                    maxScore = score;
+                    winner = $"Player {i + 1} ({playerColor})";
+                    winnerIndex = i;
+                }
             }
+
+            // Update the winner's win count
+            if (winnerIndex != -1)
+            {
+                players[winnerIndex].Wins++;
+            }
+
+            ResultTextBlock.Text += $"Winner: {winner} with {maxScore} points.\n";
         }
 
-        private void UpdateDiceResults()
+        private int CalculateScore(Player player)
         {
+            // Calculate the score based on the player's resources
+            return player.Resources[ResourceType.Wood] * 10 +
+                   player.Resources[ResourceType.Brick] * 10 +
+                   player.Resources[ResourceType.Wheat] * 10 +
+                   player.Resources[ResourceType.Ore] * 8 +
+                   player.Resources[ResourceType.Sheep] * 6;
+        }
+
+        private void ShowTotalWins()
+        {
+            ResultTextBlock.Text += "\nTotal Wins:\n";
+            int maxWins = int.MinValue;
+            string overallWinner = "";
+
+            // Display the total wins for each player
+            for (int i = 0; i < players.Count; i++)
+            {
+                var player = players[i];
+                var playerColor = GetPlayerColorText(i).ToString();
+                var playerStrategy = GetPlayerStrategy(i);
+                ResultTextBlock.Text += $"{playerColor} ({playerStrategy}) Wins: {player.Wins}\n";
+
+                if (player.Wins > maxWins)
+                {
+                    maxWins = player.Wins;
+                    overallWinner = $"{playerColor} ({playerStrategy})";
+                }
+            }
+
+            ResultTextBlock.Text += $"Overall Winner: {overallWinner} with {maxWins} wins.\n";
+        }
+
+        private void UpdateDiceResults(Game game)
+        {
+            // Display the dice roll results
             DiceResultsListBox.Items.Clear();
-            foreach (var result in _game.DiceResults)
+            foreach (var result in game.DiceResults)
             {
                 DiceResultsListBox.Items.Add($"Dice Roll: {result}");
             }
         }
-    }
 
+        private void SaveResults()
+        {
+            // Read previous results from the file
+            var previousResults = new Dictionary<string, int>();
+            if (File.Exists(ResultsFilePath))
+            {
+                using (StreamReader reader = new StreamReader(ResultsFilePath))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var parts = line.Split(':');
+                        if (parts.Length == 2 && int.TryParse(parts[1], out int wins))
+                        {
+                            previousResults[parts[0]] = wins;
+                        }
+                    }
+                }
+            }
+
+            // Update the results with the new wins
+            foreach (var player in players)
+            {
+                var key = $"{GetPlayerColorText(players.IndexOf(player))} ({GetPlayerStrategy(players.IndexOf(player))})";
+                if (previousResults.ContainsKey(key))
+                {
+                    previousResults[key] += player.Wins;
+                }
+                else
+                {
+                    previousResults[key] = player.Wins;
+                }
+            }
+
+            // Write the updated results back to the file
+            using (StreamWriter writer = new StreamWriter(ResultsFilePath))
+            {
+                foreach (var entry in previousResults)
+                {
+                    writer.WriteLine($"{entry.Key}: {entry.Value}");
+                }
+            }
+        }
+
+        private void LoadPlayerWins()
+        {
+            // Load the win counts from the file
+            if (File.Exists(ResultsFilePath))
+            {
+                using (StreamReader reader = new StreamReader(ResultsFilePath))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var parts = line.Split(':');
+                        if (parts.Length == 2 && int.TryParse(parts[1], out int wins))
+                        {
+                            for (int i = 0; i < players.Count; i++)
+                            {
+                                var key = $"{GetPlayerColorText(i)} ({GetPlayerStrategy(i)})";
+                                if (key == parts[0])
+                                {
+                                    players[i].Wins = wins;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     public static class Hexagon
     {
+        // Convert hexagon coordinates to pixel coordinates
         public static (double x, double y) HexToPixel(int q, int r, double size)
         {
             double x = size * (3.0 / 2 * q);
@@ -198,9 +381,9 @@ namespace CatanM_S
             return (x, y);
         }
 
+        // Convert intersection coordinates to pixel coordinates
         public static (double x, double y) IntersectionToPixel(int q, int r, double size)
         {
-            // Calcular las posiciones de las intersecciones
             double x = size * (3.0 / 2 * q);
             double y = size * (Math.Sqrt(3) / 2 * q + Math.Sqrt(3) * r);
             return (x, y);

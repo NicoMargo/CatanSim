@@ -6,6 +6,7 @@ namespace CatanM_S.Models
     {
         public List<Intersection> Houses { get; set; }
         public Dictionary<ResourceType, int> Resources { get; set; }
+        public int Wins { get; set; }
 
         public Player()
         {
@@ -18,6 +19,7 @@ namespace CatanM_S.Models
                 { ResourceType.Wheat, 0 },
                 { ResourceType.Ore, 0 }
             };
+            Wins = 0;
         }
 
         public void AddHouse(Intersection intersection)
