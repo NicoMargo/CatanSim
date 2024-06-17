@@ -1,4 +1,4 @@
-Red (Random): 377
-Blue (Best Number Probability): 140
-Green (Best Resources): 1179
-Yellow (Best Resources and Number): 314
+Red (Random): 1167
+Blue (Best Number Probability): 396
+Green (Best Resources): 3478
+Yellow (Best Resources and Number): 969

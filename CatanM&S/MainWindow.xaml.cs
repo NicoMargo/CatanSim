@@ -49,6 +49,11 @@ namespace CatanM_S
             ShowTotalWins();
         }
 
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
         private void InitializePlayers()
         {
             // Initialize players only once
@@ -98,7 +103,7 @@ namespace CatanM_S
                 foreach (var house in player.Houses)
                 {
                     var (x, y) = Hexagon.IntersectionToPixel(house.Q, house.R, HexSize);
-                    DrawHouse(x + BoardCanvas.Width / 2, y + BoardCanvas.Height / 2, GetPlayerColor(i));
+                    DrawHouse(x + BoardCanvas.Width / 2, (y + BoardCanvas.Height / 2) + 15, GetPlayerColor(i));
                 }
             }
         }
@@ -141,19 +146,42 @@ namespace CatanM_S
 
         private void DrawHouse(double x, double y, Brush color)
         {
-            // Draw a house with the given color at the specified coordinates
-            Ellipse house = new Ellipse
+            // Set the size of the house
+            double houseWidth = 7.5;
+            double houseHeight = 5;
+            double roofHeight = 7.5;
+
+            // Create the body of the house
+            Rectangle houseBody = new Rectangle
             {
-                Stroke = color,
-                StrokeThickness = 2,
+                Stroke = Brushes.Black,
+                StrokeThickness = 1,
                 Fill = color,
-                Width = 10,
-                Height = 10
+                Width = houseWidth,
+                Height = houseHeight
             };
-            Canvas.SetLeft(house, x - 5);  // Center the house
-            Canvas.SetTop(house, y - 5);   // Center the house
-            BoardCanvas.Children.Add(house);
+            Canvas.SetLeft(houseBody, x - houseWidth / 2); // Center the house body
+            Canvas.SetTop(houseBody, y - houseHeight / 2); // Center the house body vertically
+
+            // Create the roof of the house
+            Polygon roof = new Polygon
+            {
+                Stroke = Brushes.Black,
+                StrokeThickness = 1,
+                Fill = color, // Fill the roof with the same color as the house body
+                Points = new PointCollection
+        {
+            new Point(x - houseWidth / 2, y - houseHeight / 2), // Left corner of the roof
+            new Point(x + houseWidth / 2, y - houseHeight / 2), // Right corner of the roof
+            new Point(x, y - houseHeight / 2 - roofHeight)      // Top of the roof
         }
+            };
+
+            // Add the house body and roof to the canvas
+            BoardCanvas.Children.Add(houseBody);
+            BoardCanvas.Children.Add(roof);
+        }
+
 
         private Brush GetResourceBrush(ResourceType resource)
         {
@@ -267,7 +295,7 @@ namespace CatanM_S
 
         private void ShowTotalWins()
         {
-            ResultTextBlock.Text += "\nTotal Wins:\n";
+            TotalTextBox.Text = "\nTotal Wins:\n";
             int maxWins = int.MinValue;
             string overallWinner = "";
 
@@ -277,7 +305,7 @@ namespace CatanM_S
                 var player = players[i];
                 var playerColor = GetPlayerColorText(i).ToString();
                 var playerStrategy = GetPlayerStrategy(i);
-                ResultTextBlock.Text += $"{playerColor} ({playerStrategy}) Wins: {player.Wins}\n";
+                TotalTextBox.Text += $"{playerColor} ({playerStrategy}) Wins: {player.Wins}\n";
 
                 if (player.Wins > maxWins)
                 {
@@ -286,7 +314,7 @@ namespace CatanM_S
                 }
             }
 
-            ResultTextBlock.Text += $"Overall Winner: {overallWinner} with {maxWins} wins.\n";
+            TotalTextBox.Text += $"Overall Winner: {overallWinner} with {maxWins} wins.\n";
         }
 
         private void UpdateDiceResults(Game game)
