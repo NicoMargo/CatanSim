@@ -10,8 +10,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Images\wooden-textured-background.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Utilities\" />
     <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\wooden-textured-background.jpg" />
   </ItemGroup>
 
 </Project>
