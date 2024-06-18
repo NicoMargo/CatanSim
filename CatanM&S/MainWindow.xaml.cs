@@ -277,7 +277,7 @@ namespace CatanM_S
             // Update the winner's win count
             if (winnerIndex != -1)
             {
-                players[winnerIndex].Wins++;
+                game.Players[winnerIndex].Wins++;
             }
 
             ResultTextBlock.Text += $"Winner: {winner} with {maxScore} points.\n";
@@ -295,22 +295,34 @@ namespace CatanM_S
 
         private void ShowTotalWins()
         {
+            if (!File.Exists(ResultsFilePath))
+            {
+                TotalTextBox.Text = "Results file not found.";
+                return;
+            }
+
+            string[] lines = File.ReadAllLines(ResultsFilePath);
             TotalTextBox.Text = "\nTotal Wins:\n";
             int maxWins = int.MinValue;
             string overallWinner = "";
+            Dictionary<string, int> playerWins = new Dictionary<string, int>();
 
-            // Display the total wins for each player
-            for (int i = 0; i < players.Count; i++)
+            foreach (var line in lines)
             {
-                var player = players[i];
-                var playerColor = GetPlayerColorText(i).ToString();
-                var playerStrategy = GetPlayerStrategy(i);
-                TotalTextBox.Text += $"{playerColor} ({playerStrategy}) Wins: {player.Wins}\n";
-
-                if (player.Wins > maxWins)
+                var parts = line.Split(':');
+                if (parts.Length == 2)
                 {
-                    maxWins = player.Wins;
-                    overallWinner = $"{playerColor} ({playerStrategy})";
+                    string playerInfo = parts[0].Trim();
+                    int wins = int.Parse(parts[1].Trim());
+
+                    playerWins[playerInfo] = wins;
+                    TotalTextBox.Text += $"{playerInfo} Wins: {wins}\n";
+
+                    if (wins > maxWins)
+                    {
+                        maxWins = wins;
+                        overallWinner = playerInfo;
+                    }
                 }
             }
 
