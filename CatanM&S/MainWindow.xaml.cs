@@ -35,7 +35,8 @@ namespace CatanM_S
 
         private async void StartSimulation_Click(object sender, RoutedEventArgs e)
         {
-            // Execute 10 Monte Carlo simulations
+            DeleteResults();
+            // Execute 2000 Monte Carlo simulations
             ResultTextBlock.Text = "";
             for (int i = 0; i < 2000; i++)
             {
@@ -380,6 +381,19 @@ namespace CatanM_S
                 {
                     writer.WriteLine($"{entry.Key}: {entry.Value}");
                 }
+            }
+        }
+
+        private void DeleteResults()
+        {
+            if (File.Exists(ResultsFilePath))
+            {
+                File.Delete(ResultsFilePath);
+                Console.WriteLine("Results file deleted successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Results file not found.");
             }
         }
 
